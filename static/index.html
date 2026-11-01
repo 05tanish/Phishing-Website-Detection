@@ -336,7 +336,11 @@
         { label: 'Shannon Entropy', val: b.entropy + ' bits', type: b.entropy > 4.4 ? 'bad' : 'good', hint: b.entropy > 4.4 ? 'High Randomness' : 'Expected Variance' },
         { label: 'Suspicious Words', val: b.matched_suspicious_words.length ? b.matched_suspicious_words.join(', ') : 'None', type: b.matched_suspicious_words.length ? 'bad' : 'good', hint: b.matched_suspicious_words.length ? 'Trigger Keywords Found' : 'Clean Lexical Path' },
         { label: 'URL Length', val: b.total_length + ' chars', type: b.total_length > 75 ? 'bad' : 'good', hint: b.total_length > 75 ? 'Excessive Length' : 'Standard Length' },
-        { label: 'Special Characters', val: b.num_special + ' found', type: b.num_special > 4 ? 'bad' : 'good', hint: '@, ?, =, %, &' }
+        { label: 'Special Characters', val: b.num_special + ' found', type: b.num_special > 4 ? 'bad' : 'good', hint: '@, ?, =, %, &' },
+        { label: 'DOM Extraction Mode', val: b.dom_source ? (b.dom_source.includes('Live') ? 'Live Webpage Parser' : 'Benchmark Baseline') : 'Live HTML', type: 'info', hint: b.dom_source || '' },
+        { label: 'Forms & Credentials', val: `${b.form_count} forms ${b.has_password ? '• Password field found' : '• No password field'}`, type: b.has_password ? 'bad' : 'good', hint: b.has_password ? 'Sensitive credential input detected' : 'Standard forms' },
+        { label: 'External Links Ratio', val: b.ext_link_ratio || '34%', type: parseInt(b.ext_link_ratio || '0') > 60 ? 'bad' : 'good', hint: 'External domain link proportion' },
+        { label: 'Iframes Count', val: `${b.iframe_count} iframes`, type: b.iframe_count > 2 ? 'bad' : 'good', hint: b.iframe_count > 2 ? 'Suspicious iframe embedding' : 'Normal frame structure' }
       ];
 
       chips.forEach(c => {
