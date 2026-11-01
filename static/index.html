@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PhishGuard — Cyber Threat &amp; Phishing Detection</title>
   <meta name="description" content="AI-driven URL scanner and phishing detection system powered by machine learning." />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -255,14 +255,22 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('/api/scan-url', {
+        let res = await fetch('/api/scan-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url }),
         });
 
+        if (res.status === 404) {
+          res = await fetch('/scan-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+          });
+        }
+
         if (!res.ok) {
-          const err = await res.json();
+          const err = await res.json().catch(() => ({ detail: 'HTTP ' + res.status }));
           throw new Error(err.detail || 'Failed to scan URL');
         }
 
@@ -432,12 +440,21 @@
       }
 
       try {
-        const res = await fetch('/api/predict', {
+        let res = await fetch('/api/predict', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error('Prediction request failed');
+
+        if (res.status === 404) {
+          res = await fetch('/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        }
+
+        if (!res.ok) throw new Error('Prediction request failed (HTTP ' + res.status + ')');
         const data = await res.json();
         
         const card = document.getElementById('manualResultCard');

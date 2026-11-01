@@ -347,7 +347,16 @@ def index_page():
     return {"message": "PhishGuard Threat Intelligence API"}
 
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    fav = _resolve_candidate(["favicon.ico"])
+    if fav and fav.exists():
+        return FileResponse(str(fav), media_type="image/x-icon")
+    return JSONResponse(status_code=204, content={})
+
+
 @app.get("/api/health")
+@app.get("/health")
 def health():
     model_found = _resolve_candidate(["best_phishing_model.pkl"]) is not None
     return {
@@ -358,6 +367,7 @@ def health():
 
 
 @app.post("/api/scan-url")
+@app.post("/scan-url")
 def scan_url(req: URLScanRequest):
     if not req.url or not req.url.strip():
         raise HTTPException(status_code=400, detail="Please enter a valid website URL.")
@@ -393,6 +403,7 @@ def scan_url(req: URLScanRequest):
 
 
 @app.post("/api/predict")
+@app.post("/predict")
 def predict_manual(req: PredictRequest):
     try:
         model = load_model()

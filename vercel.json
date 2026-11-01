@@ -8,11 +8,23 @@
   },
   "rewrites": [
     {
+      "source": "/static/(.*)",
+      "destination": "/static/$1"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
       "source": "/",
       "destination": "/static/index.html"
     },
     {
-      "source": "/api/:path*",
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/(scan-url|predict|health)",
       "destination": "/api/index.py"
     }
   ]
