@@ -255,19 +255,11 @@
       btn.disabled = true;
 
       try {
-        let res = await fetch('/api/scan-url', {
+        const res = await fetch('/scan-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url }),
         });
-
-        if (res.status === 404) {
-          res = await fetch('/scan-url', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url }),
-          });
-        }
 
         if (!res.ok) {
           const err = await res.json().catch(() => ({ detail: 'HTTP ' + res.status }));
@@ -440,19 +432,11 @@
       }
 
       try {
-        let res = await fetch('/api/predict', {
+        const res = await fetch('/predict', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-
-        if (res.status === 404) {
-          res = await fetch('/predict', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-        }
 
         if (!res.ok) throw new Error('Prediction request failed (HTTP ' + res.status + ')');
         const data = await res.json();

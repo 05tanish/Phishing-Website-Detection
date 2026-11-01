@@ -355,7 +355,6 @@ def favicon():
     return JSONResponse(status_code=204, content={})
 
 
-@app.get("/api/health")
 @app.get("/health")
 def health():
     model_found = _resolve_candidate(["best_phishing_model.pkl"]) is not None
@@ -366,7 +365,6 @@ def health():
     }
 
 
-@app.post("/api/scan-url")
 @app.post("/scan-url")
 def scan_url(req: URLScanRequest):
     if not req.url or not req.url.strip():
@@ -402,7 +400,6 @@ def scan_url(req: URLScanRequest):
         raise HTTPException(status_code=500, detail=f"Scan error: {str(e)}")
 
 
-@app.post("/api/predict")
 @app.post("/predict")
 def predict_manual(req: PredictRequest):
     try:
@@ -439,31 +436,34 @@ def predict_manual(req: PredictRequest):
 async def catch_all_router(request: Request, path_name: str):
     p = path_name.lower().strip("/")
     raw_path = request.url.path.lower()
+    action = request.query_params.get("action", "").lower()
+    target = f"{p} {raw_path} {action}"
 
-    if "favicon.ico" in p or "favicon.ico" in raw_path:
+    if "favicon.ico" in target:
         return favicon()
 
-    if "health" in p or "health" in raw_path:
+    if "health" in target:
         return health()
 
-    if ("scan-url" in p or "scan-url" in raw_path) and request.method == "POST":
+    if "scan-url" in target and request.method == "POST":
         try:
             body = await request.json()
             return scan_url(URLScanRequest(**body))
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
-    if ("predict" in p or "predict" in raw_path) and request.method == "POST":
+    if "predict" in target and request.method == "POST":
         try:
             body = await request.json()
             return predict_manual(PredictRequest(**body))
         except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
+    # Fallback to index if no specific action was requested
     if not p or p in ["index", "index.py", "api", "api/index", "api/index.py"]:
         return index_page()
 
     return JSONResponse(
         status_code=404,
-        content={"detail": f"Route '{path_name}' not found", "url_path": request.url.path}
+        content={"detail": f"Route '{path_name}' not found", "target": target}
     )

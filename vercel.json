@@ -1,27 +1,13 @@
 {
   "version": 2,
-  "cleanUrls": true,
   "functions": {
-    "api/*.py": {
+    "api/index.py": {
       "includeFiles": "api/**"
     }
   },
   "rewrites": [
-    {
-      "source": "/static/(.*)",
-      "destination": "/static/$1"
-    },
-    {
-      "source": "/favicon.ico",
-      "destination": "/favicon.ico"
-    },
-    {
-      "source": "/",
-      "destination": "/static/index.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/api/index.py"
-    }
+    { "source": "/static/(.*)", "destination": "/static/$1" },
+    { "source": "/favicon.ico",  "destination": "/favicon.ico" },
+    { "source": "/(.*)",         "destination": "/api/index.py" }
   ]
 }
