@@ -20,11 +20,7 @@
       "destination": "/static/index.html"
     },
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/(scan-url|predict|health)",
+      "source": "/(.*)",
       "destination": "/api/index.py"
     }
   ]

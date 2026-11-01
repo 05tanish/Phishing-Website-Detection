@@ -17,7 +17,7 @@ from functools import lru_cache
 
 import joblib
 import numpy as np
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -430,3 +430,40 @@ def predict_manual(req: PredictRequest):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+
+
+# ==============================================================================
+# CATCH-ALL ROUTE (Immunity against Vercel prefix/rewrite mutations)
+# ==============================================================================
+@app.api_route("/{path_name:path}", methods=["GET", "POST", "OPTIONS", "HEAD"], include_in_schema=False)
+async def catch_all_router(request: Request, path_name: str):
+    p = path_name.lower().strip("/")
+    raw_path = request.url.path.lower()
+
+    if "favicon.ico" in p or "favicon.ico" in raw_path:
+        return favicon()
+
+    if "health" in p or "health" in raw_path:
+        return health()
+
+    if ("scan-url" in p or "scan-url" in raw_path) and request.method == "POST":
+        try:
+            body = await request.json()
+            return scan_url(URLScanRequest(**body))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    if ("predict" in p or "predict" in raw_path) and request.method == "POST":
+        try:
+            body = await request.json()
+            return predict_manual(PredictRequest(**body))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    if not p or p in ["index", "index.py", "api", "api/index", "api/index.py"]:
+        return index_page()
+
+    return JSONResponse(
+        status_code=404,
+        content={"detail": f"Route '{path_name}' not found", "url_path": request.url.path}
+    )
