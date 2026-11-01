@@ -356,6 +356,7 @@ def favicon():
 
 
 @app.get("/health")
+@app.get("/api/health")
 def health():
     model_found = _resolve_candidate(["best_phishing_model.pkl"]) is not None
     return {
@@ -366,6 +367,7 @@ def health():
 
 
 @app.post("/scan-url")
+@app.post("/api/scan-url")
 def scan_url(req: URLScanRequest):
     if not req.url or not req.url.strip():
         raise HTTPException(status_code=400, detail="Please enter a valid website URL.")
@@ -401,6 +403,7 @@ def scan_url(req: URLScanRequest):
 
 
 @app.post("/predict")
+@app.post("/api/predict")
 def predict_manual(req: PredictRequest):
     try:
         model = load_model()
@@ -436,31 +439,31 @@ def predict_manual(req: PredictRequest):
 async def catch_all_router(request: Request, path_name: str):
     p = path_name.lower().strip("/")
     raw_path = request.url.path.lower()
+    matched = request.headers.get("x-matched-path", "").lower()
     action = request.query_params.get("action", "").lower()
-    target = f"{p} {raw_path} {action}"
+    target = f"{p} {raw_path} {matched} {action}"
 
+    # Handle favicon
     if "favicon.ico" in target:
         return favicon()
 
+    # Handle health check
     if "health" in target:
         return health()
 
-    if "scan-url" in target and request.method == "POST":
+    # ANY POST request reaching here: inspect payload and route to ML engine
+    if request.method == "POST":
         try:
             body = await request.json()
-            return scan_url(URLScanRequest(**body))
+            if "url" in body:
+                return scan_url(URLScanRequest(**body))
+            else:
+                return predict_manual(PredictRequest(**body))
         except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
+            return JSONResponse(status_code=400, content={"detail": str(e)})
 
-    if "predict" in target and request.method == "POST":
-        try:
-            body = await request.json()
-            return predict_manual(PredictRequest(**body))
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=str(e))
-
-    # Fallback to index if no specific action was requested
-    if not p or p in ["index", "index.py", "api", "api/index", "api/index.py"]:
+    # For GET requests:
+    if not p or any(x in p for x in ["index", "api"]):
         return index_page()
 
     return JSONResponse(

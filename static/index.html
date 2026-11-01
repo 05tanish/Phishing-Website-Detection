@@ -255,15 +255,32 @@
       btn.disabled = true;
 
       try {
-        const res = await fetch('/scan-url', {
+        let res = await fetch('/scan-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url }),
         });
 
+        if (!res.ok && res.status === 404) {
+          res = await fetch('/api/scan-url', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+          });
+        }
+
+        const ct = res.headers.get('content-type') || '';
         if (!res.ok) {
-          const err = await res.json().catch(() => ({ detail: 'HTTP ' + res.status }));
-          throw new Error(err.detail || 'Failed to scan URL');
+          let errDetail = 'HTTP ' + res.status;
+          if (ct.includes('application/json')) {
+            const errJson = await res.json().catch(() => null);
+            if (errJson && errJson.detail) errDetail = errJson.detail;
+          }
+          throw new Error(errDetail);
+        }
+
+        if (!ct.includes('application/json')) {
+          throw new Error('Server returned unexpected content. Please retry.');
         }
 
         const data = await res.json();
@@ -432,13 +449,34 @@
       }
 
       try {
-        const res = await fetch('/predict', {
+        let res = await fetch('/predict', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
 
-        if (!res.ok) throw new Error('Prediction request failed (HTTP ' + res.status + ')');
+        if (!res.ok && res.status === 404) {
+          res = await fetch('/api/predict', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+        }
+
+        const ct = res.headers.get('content-type') || '';
+        if (!res.ok) {
+          let errDetail = 'HTTP ' + res.status;
+          if (ct.includes('application/json')) {
+            const errJson = await res.json().catch(() => null);
+            if (errJson && errJson.detail) errDetail = errJson.detail;
+          }
+          throw new Error(errDetail);
+        }
+
+        if (!ct.includes('application/json')) {
+          throw new Error('Server returned unexpected content. Please retry.');
+        }
+
         const data = await res.json();
         
         const card = document.getElementById('manualResultCard');

@@ -1,13 +1,17 @@
 {
   "version": 2,
-  "functions": {
-    "api/index.py": {
-      "includeFiles": "api/**"
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": ["api/**", "static/**", "favicon.ico"]
+      }
     }
-  },
-  "rewrites": [
-    { "source": "/static/(.*)", "destination": "/static/$1" },
-    { "source": "/favicon.ico",  "destination": "/favicon.ico" },
-    { "source": "/(.*)",         "destination": "/api/index.py" }
+  ],
+  "routes": [
+    { "src": "/static/(.*)", "dest": "/static/$1" },
+    { "src": "/favicon.ico", "dest": "/favicon.ico" },
+    { "src": "/(.*)", "dest": "api/index.py" }
   ]
 }
