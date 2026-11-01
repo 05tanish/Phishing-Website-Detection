@@ -8,10 +8,6 @@
   },
   "rewrites": [
     {
-      "source": "/model-info",
-      "destination": "/static/model-info.html"
-    },
-    {
       "source": "/",
       "destination": "/static/index.html"
     },

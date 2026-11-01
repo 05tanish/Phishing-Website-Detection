@@ -3,198 +3,431 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Phishing Detector — Live Detection</title>
-  <meta name="description" content="AI-powered phishing website detector using Random Forest ML model." />
+  <title>PhishGuard — Cyber Threat &amp; Phishing Detection</title>
+  <meta name="description" content="AI-driven URL scanner and phishing detection system powered by machine learning." />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/css/style.css" />
 </head>
-<body class="layout">
+<body>
 
-  <!-- ── Top Nav ──────────────────────────────────────────── -->
-  <nav class="topnav">
-    <div class="container">
-      <a href="/" class="nav-brand">
-        <span class="shield">🛡️</span>
-        <span>PhishGuard</span>
+  <!-- ── Top Nav ─────────────────────────────────────────── -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="/" class="brand">
+        <div class="brand-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <span class="brand-text">PHISHGUARD</span>
       </a>
-      <div class="nav-links">
-        <a href="/" class="nav-link active">🔍 Detect</a>
-        <a href="/model-info" class="nav-link">📊 Model Info</a>
+
+      <div class="system-status">
+        <span class="pulse-dot"></span>
+        <span>RADAR ACTIVE · RF CORE</span>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- ── Hero ─────────────────────────────────────────────── -->
+  <!-- ── Hero ────────────────────────────────────────────── -->
   <section class="hero">
     <div class="container">
-      <span class="hero-icon">🛡️</span>
-      <h1>Phishing Website<br>Detector</h1>
-      <p>Real-time ML-powered classification using a tuned Random Forest model trained on 25,000 website samples.</p>
-      <a href="/model-info" class="hero-cta">View Model Analysis &amp; Performance →</a>
+      <div class="hero-tag">⚡ CYBER THREAT DETECTOR</div>
+      <h1>Real-Time Website <span class="gradient-text">Phishing Detection</span></h1>
+      <p>Scan any full URL to automatically decompose lexical attributes and detect fraud, or inspect parameters manually.</p>
+
+      <!-- Mode Switcher -->
+      <div class="mode-tabs">
+        <button class="mode-tab active" id="tabUrl" onclick="switchMode('url')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          URL Scanner
+        </button>
+        <button class="mode-tab" id="tabManual" onclick="switchMode('manual')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          Manual Parameters
+        </button>
+      </div>
     </div>
   </section>
 
-  <!-- ── Main ─────────────────────────────────────────────── -->
-  <main class="main">
-    <div class="container">
+  <!-- ── Main Workspace ───────────────────────────────────── -->
+  <main class="container">
+    <div class="card-main">
 
-      <!-- Detection Card -->
-      <div class="card">
-        <div class="card-title"><span class="icon">🔍</span> Live Website Classification</div>
+      <!-- ====================================================
+           MODE 1: AUTOMATIC FULL URL SCANNER
+      ==================================================== -->
+      <div id="urlModeWrap" class="url-scan-form">
+        <div class="url-input-wrap">
+          <span class="url-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </span>
+          <input 
+            type="text" 
+            id="urlInput" 
+            class="url-input" 
+            placeholder="Enter or paste full website URL (e.g., https://secure-login.paypal.verify-auth.com)" 
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button class="btn-scan" id="btnScan" onclick="runUrlScan()">
+            <span class="spinner"></span>
+            <span class="btn-text">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;vertical-align:-2px;">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              Scan Website
+            </span>
+          </button>
+        </div>
 
-        <!-- Preset selector -->
-        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-4);">
-          Choose a preset scenario or fill in features manually:
+        <!-- Quick Sample Presets -->
+        <div class="sample-pills">
+          <span class="sample-pills-label">Quick Tests:</span>
+          <button class="sample-pill safe-pill" onclick="loadSample('https://www.google.com')">✅ Google</button>
+          <button class="sample-pill safe-pill" onclick="loadSample('https://www.wikipedia.org/wiki/Cybersecurity')">✅ Wikipedia</button>
+          <button class="sample-pill safe-pill" onclick="loadSample('https://github.com/05tanish')">✅ GitHub Profile</button>
+          <button class="sample-pill phish-pill" onclick="loadSample('http://192.168.1.50/paypal.com/update-security/login.php?user=alert')">🚨 Fake PayPal (IP Host)</button>
+          <button class="sample-pill phish-pill" onclick="loadSample('http://secure-verify-appleid-support-account.tk/signin.html')">🚨 Fake Apple ID Alert</button>
+        </div>
+
+        <!-- Scan Result Container -->
+        <div id="urlResultCard" class="scan-result-card">
+          <div class="verdict-header">
+            <div class="verdict-badge" id="verdictBadge">
+              <span id="verdictIcon">🛡️</span>
+              <span id="verdictText">VERDICT</span>
+            </div>
+            <div class="score-display">
+              <span class="score-number" id="confidenceScore">0%</span>
+              <span class="score-label" id="confidenceLabel">CONFIDENCE</span>
+            </div>
+          </div>
+
+          <!-- Risk / Legit Meter -->
+          <div class="meter-track">
+            <div class="meter-fill" id="meterFill" style="width: 50%;"></div>
+          </div>
+
+          <!-- Attribute Breakdown Chips -->
+          <div class="breakdown-section-title">Decomposed URL Attributes</div>
+          <div class="breakdown-grid" id="breakdownGrid"></div>
+
+          <!-- Collapsible Extracted Features -->
+          <button class="details-toggle" onclick="toggleDetails()">
+            <span>Inspect 20 ML Feature Inputs Extracted</span>
+            <span id="toggleArrow">▼</span>
+          </button>
+
+          <div class="features-table-wrap" id="featuresTableWrap">
+            <table class="extracted-table">
+              <thead>
+                <tr>
+                  <th>Feature</th>
+                  <th>Extracted Value</th>
+                  <th>Feature</th>
+                  <th>Extracted Value</th>
+                </tr>
+              </thead>
+              <tbody id="extractedTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====================================================
+           MODE 2: MANUAL PARAMETER INSPECTOR
+      ==================================================== -->
+      <div id="manualModeWrap" class="manual-wrap">
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:1.25rem;">
+          Select a preset scenario or customize the 20 technical parameters manually:
         </p>
-        <div class="preset-grid" id="presetGrid">
-          <button class="preset-btn selected" data-preset="custom" onclick="applyPreset('custom', this)">
-            <span class="preset-name">✏️ Custom Input</span>
-            <span class="preset-desc">Fill all fields manually</span>
-          </button>
-          <button class="preset-btn" data-preset="legitimate" onclick="applyPreset('legitimate', this)">
-            <span class="preset-name">✅ Legitimate Bank</span>
-            <span class="preset-desc">HTTPS, old domain, low entropy</span>
-          </button>
-          <button class="preset-btn" data-preset="phishing" onclick="applyPreset('phishing', this)">
-            <span class="preset-name">🚨 High-Risk Phishing</span>
-            <span class="preset-desc">No HTTPS, new domain, high entropy</span>
-          </button>
-          <button class="preset-btn" data-preset="redirect" onclick="applyPreset('redirect', this)">
-            <span class="preset-name">⚠️ Redirect Scam</span>
-            <span class="preset-desc">Iframes, popups, redirects</span>
-          </button>
+
+        <!-- Presets -->
+        <div class="manual-presets">
+          <div class="preset-card active" id="pCustom" onclick="applyPreset('custom')">
+            <div class="preset-card-title">✏️ Custom Manual</div>
+            <div class="preset-card-desc">Enter arbitrary parameters</div>
+          </div>
+          <div class="preset-card" id="pLegit" onclick="applyPreset('legitimate')">
+            <div class="preset-card-title">✅ Legitimate Bank</div>
+            <div class="preset-card-desc">HTTPS, 10yr domain, low entropy</div>
+          </div>
+          <div class="preset-card" id="pPhish" onclick="applyPreset('phishing')">
+            <div class="preset-card-title">🚨 Malicious Phishing</div>
+            <div class="preset-card-desc">IP host, young domain, high entropy</div>
+          </div>
+          <div class="preset-card" id="pRedirect" onclick="applyPreset('redirect')">
+            <div class="preset-card-title">⚠️ Redirect Scam</div>
+            <div class="preset-card-desc">Popups, redirects, forms</div>
+          </div>
         </div>
 
-        <!-- Feature inputs -->
-        <div class="feature-grid" id="featureGrid">
-          <!-- Injected by JS -->
-        </div>
+        <!-- 20 Form Fields -->
+        <div class="fields-grid" id="manualFieldsGrid"></div>
 
-        <!-- Detect button -->
-        <button class="btn-detect" id="detectBtn" onclick="runDetection()">
-          <div class="spinner"></div>
-          <span class="btn-text">🔍 &nbsp;Detect Phishing</span>
+        <button class="btn-manual-detect" id="btnManual" onclick="runManualPredict()">
+          <span class="spinner"></span>
+          <span class="btn-text">🔍 Execute Model Prediction</span>
         </button>
 
-        <!-- Result panel -->
-        <div class="result-panel" id="resultPanel">
-          <div class="result-verdict" id="resultVerdict"></div>
-          <div class="result-sub" id="resultSub"></div>
-
-          <div class="prob-metrics">
-            <div class="prob-metric legit">
-              <div class="value" id="legitPct">—</div>
-              <div class="label">Legitimate probability</div>
+        <!-- Manual Result -->
+        <div id="manualResultCard" class="scan-result-card">
+          <div class="verdict-header">
+            <div class="verdict-badge" id="mVerdictBadge">
+              <span id="mVerdictIcon">🛡️</span>
+              <span id="mVerdictText">VERDICT</span>
             </div>
-            <div class="prob-metric phish">
-              <div class="value" id="phishPct">—</div>
-              <div class="label">Phishing probability</div>
+            <div class="score-display">
+              <span class="score-number" id="mConfidenceScore">0%</span>
+              <span class="score-label" id="mConfidenceLabel">CONFIDENCE</span>
             </div>
           </div>
-
-          <div class="prob-bar-wrap">
-            <div class="prob-bar-label">
-              <span id="barLegitLabel">Legitimate</span>
-              <span id="barPhishLabel">Phishing</span>
-            </div>
-            <div class="prob-bar-track" style="overflow:visible;">
-              <div style="height:100%;display:flex;border-radius:99px;overflow:hidden;">
-                <div class="prob-bar-fill-legit" id="barLegit" style="width:50%"></div>
-                <div class="prob-bar-fill-phish" id="barPhish" style="width:50%"></div>
-              </div>
-            </div>
+          <div class="meter-track">
+            <div class="meter-fill" id="mMeterFill" style="width: 50%;"></div>
           </div>
         </div>
-      </div>
-
-      <!-- Dataset Quick Stats -->
-      <div style="margin-top:var(--space-8)">
-        <div class="section-label">Dataset</div>
-        <div class="section-title">Training Data Overview</div>
-      </div>
-      <div class="stats-grid" id="statsGrid">
-        <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Records</div></div>
-        <div class="stat-card"><div class="stat-value" id="statFeatures">20</div><div class="stat-label">Input Features</div></div>
-        <div class="stat-card"><div class="stat-value" id="statLegit">—</div><div class="stat-label">Legitimate Sites</div></div>
-        <div class="stat-card"><div class="stat-value" id="statPhish">—</div><div class="stat-label">Phishing Sites</div></div>
-        <div class="stat-card"><div class="stat-value" id="statBestF1">—</div><div class="stat-label">Best Model F1</div></div>
       </div>
 
     </div>
   </main>
 
-  <!-- ── Footer ────────────────────────────────────────────── -->
+  <!-- ── Footer ──────────────────────────────────────────── -->
   <footer>
     <div class="container">
-      🛡️ PhishGuard — ML-powered phishing detection &nbsp;·&nbsp;
-      Built with FastAPI + Vanilla JS &nbsp;·&nbsp;
-      <a href="/model-info" style="color:var(--blue);text-decoration:none;">View Model Info</a>
+      PhishGuard Threat Intelligence · Pure Python FastAPI &amp; Machine Learning Engine
     </div>
   </footer>
 
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
-  <script src="/static/js/app.js"></script>
+  <!-- ── Application Logic ───────────────────────────────── -->
   <script>
-    // ── Boot ───────────────────────────────────────────────────────
-    const FEATURES_META = [];
+    // Tab switching
+    function switchMode(mode) {
+      const isUrl = mode === 'url';
+      document.getElementById('tabUrl').classList.toggle('active', isUrl);
+      document.getElementById('tabManual').classList.toggle('active', !isUrl);
+      document.getElementById('urlModeWrap').style.display = isUrl ? 'flex' : 'none';
+      document.getElementById('manualModeWrap').classList.toggle('active', !isUrl);
+    }
 
-    const PRESETS = {
-      custom:     { URL_Length:0,Num_Dots:0,Num_Hyphens:0,Num_Special_Chars:0,Num_Subdomains:0,Has_IP_Address:0,Has_HTTPS:1,Domain_Age_Days:0,Domain_Registration_Length:0,Has_Suspicious_Words:0,Num_Redirects:0,External_Link_Ratio:0,Image_Link_Ratio:0,Form_Count:0,Password_Field_Present:0,Iframe_Count:0,Popup_Count:0,Favicon_External:0,Domain_Name_Length:0,URL_Entropy:0 },
-      legitimate: { URL_Length:24,Num_Dots:1,Num_Hyphens:0,Num_Special_Chars:1,Num_Subdomains:0,Has_IP_Address:0,Has_HTTPS:1,Domain_Age_Days:3650,Domain_Registration_Length:730,Has_Suspicious_Words:0,Num_Redirects:0,External_Link_Ratio:0.15,Image_Link_Ratio:0.20,Form_Count:1,Password_Field_Present:1,Iframe_Count:0,Popup_Count:0,Favicon_External:0,Domain_Name_Length:10,URL_Entropy:3.12 },
-      phishing:   { URL_Length:115,Num_Dots:6,Num_Hyphens:4,Num_Special_Chars:7,Num_Subdomains:3,Has_IP_Address:1,Has_HTTPS:0,Domain_Age_Days:12,Domain_Registration_Length:30,Has_Suspicious_Words:1,Num_Redirects:3,External_Link_Ratio:0.85,Image_Link_Ratio:0.90,Form_Count:4,Password_Field_Present:1,Iframe_Count:2,Popup_Count:3,Favicon_External:1,Domain_Name_Length:28,URL_Entropy:4.88 },
-      redirect:   { URL_Length:88,Num_Dots:4,Num_Hyphens:3,Num_Special_Chars:5,Num_Subdomains:2,Has_IP_Address:0,Has_HTTPS:0,Domain_Age_Days:45,Domain_Registration_Length:90,Has_Suspicious_Words:1,Num_Redirects:4,External_Link_Ratio:0.70,Image_Link_Ratio:0.60,Form_Count:3,Password_Field_Present:0,Iframe_Count:3,Popup_Count:4,Favicon_External:1,Domain_Name_Length:22,URL_Entropy:4.52 },
-    };
+    // Load sample into URL box and automatically scan
+    function loadSample(url) {
+      document.getElementById('urlInput').value = url;
+      runUrlScan();
+    }
 
+    // ── URL SCANNER ──────────────────────────────────────────
+    async function runUrlScan() {
+      const input = document.getElementById('urlInput');
+      const url = input.value.trim();
+      if (!url) {
+        showToast('Please enter a website URL.', true);
+        input.focus();
+        return;
+      }
+
+      const btn = document.getElementById('btnScan');
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/scan-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || 'Failed to scan URL');
+        }
+
+        const data = await res.json();
+        renderScanResult(data);
+      } catch (err) {
+        showToast(err.message, true);
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    function renderScanResult(data) {
+      const card = document.getElementById('urlResultCard');
+      const isPhish = data.prediction === 1;
+      card.className = 'scan-result-card visible ' + (isPhish ? 'phishing' : 'legitimate');
+
+      const badge = document.getElementById('verdictBadge');
+      const icon = document.getElementById('verdictIcon');
+      const text = document.getElementById('verdictText');
+      const score = document.getElementById('confidenceScore');
+      const label = document.getElementById('confidenceLabel');
+      const meter = document.getElementById('meterFill');
+
+      if (isPhish) {
+        icon.textContent = '🚨';
+        text.textContent = 'PHISHING DETECTED';
+        const p = data.probability ? data.probability.phishing : 95.0;
+        score.textContent = p.toFixed(1) + '%';
+        label.textContent = 'THREAT PROBABILITY';
+        meter.style.width = p + '%';
+      } else {
+        icon.textContent = '🛡️';
+        text.textContent = 'LEGITIMATE WEBSITE';
+        const l = data.probability ? data.probability.legitimate : 95.0;
+        score.textContent = l.toFixed(1) + '%';
+        label.textContent = 'SAFETY CONFIDENCE';
+        meter.style.width = l + '%';
+      }
+
+      // Breakdown Chips
+      const b = data.breakdown;
+      const grid = document.getElementById('breakdownGrid');
+      grid.innerHTML = '';
+
+      const chips = [
+        { label: 'Hostname / Domain', val: b.hostname || b.domain_name, type: 'info', hint: '' },
+        { label: 'Protocol', val: b.scheme.toUpperCase(), type: b.has_https ? 'good' : 'bad', hint: b.has_https ? 'SSL Encrypted' : 'Unencrypted HTTP' },
+        { label: 'Domain Age', val: b.domain_age_days + ' days', type: b.domain_age_days > 180 ? 'good' : 'bad', hint: b.domain_age_source || 'ICANN RDAP / Heuristic' },
+        { label: 'Redirect Count', val: b.redirects_count + ' hops', type: b.redirects_count > 1 ? 'bad' : 'good', hint: b.redirect_source || 'Direct' },
+        { label: 'Subdomains', val: b.num_subdomains + ' detected', type: b.num_subdomains >= 2 ? 'bad' : 'good', hint: b.num_subdomains >= 2 ? 'Deep Subdomains' : 'Normal Structure' },
+        { label: 'IP As Hostname', val: b.has_ip ? 'YES (High Risk)' : 'No', type: b.has_ip ? 'bad' : 'good', hint: b.has_ip ? 'Direct IP Address' : 'Named Host' },
+        { label: 'Shannon Entropy', val: b.entropy + ' bits', type: b.entropy > 4.4 ? 'bad' : 'good', hint: b.entropy > 4.4 ? 'High Randomness' : 'Expected Variance' },
+        { label: 'Suspicious Words', val: b.matched_suspicious_words.length ? b.matched_suspicious_words.join(', ') : 'None', type: b.matched_suspicious_words.length ? 'bad' : 'good', hint: b.matched_suspicious_words.length ? 'Trigger Keywords Found' : 'Clean Lexical Path' },
+        { label: 'URL Length', val: b.total_length + ' chars', type: b.total_length > 75 ? 'bad' : 'good', hint: b.total_length > 75 ? 'Excessive Length' : 'Standard Length' },
+        { label: 'Special Characters', val: b.num_special + ' found', type: b.num_special > 4 ? 'bad' : 'good', hint: '@, ?, =, %, &' }
+      ];
+
+      chips.forEach(c => {
+        const div = document.createElement('div');
+        div.className = 'breakdown-chip';
+        div.innerHTML = `
+          <div class="chip-label">${c.label}</div>
+          <div class="chip-val ${c.type}">${c.val}</div>
+          ${c.hint ? `<div class="chip-source-hint">${c.hint}</div>` : ''}
+        `;
+        grid.appendChild(div);
+      });
+
+      // Extracted features table
+      const feats = data.extracted_features;
+      const tbody = document.getElementById('extractedTableBody');
+      tbody.innerHTML = '';
+      const keys = Object.keys(feats);
+      for (let i = 0; i < keys.length; i += 2) {
+        const k1 = keys[i];
+        const k2 = keys[i + 1];
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${k1.replace(/_/g, ' ')}</td>
+          <td><strong>${feats[k1]}</strong></td>
+          ${k2 ? `<td>${k2.replace(/_/g, ' ')}</td><td><strong>${feats[k2]}</strong></td>` : '<td></td><td></td>'}
+        `;
+        tbody.appendChild(tr);
+      }
+
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function toggleDetails() {
+      const wrap = document.getElementById('featuresTableWrap');
+      const arrow = document.getElementById('toggleArrow');
+      const isOpen = wrap.classList.toggle('open');
+      arrow.textContent = isOpen ? '▲' : '▼';
+    }
+
+    // ── MANUAL MODE ──────────────────────────────────────────
+    const ORDER = [
+      'URL_Length','Num_Dots','Num_Hyphens','Num_Special_Chars','Num_Subdomains',
+      'Has_IP_Address','Has_HTTPS','Domain_Age_Days','Domain_Registration_Length',
+      'Has_Suspicious_Words','Num_Redirects','External_Link_Ratio','Image_Link_Ratio',
+      'Form_Count','Password_Field_Present','Iframe_Count','Popup_Count',
+      'Favicon_External','Domain_Name_Length','URL_Entropy'
+    ];
     const BINARY = new Set(['Has_IP_Address','Has_HTTPS','Has_Suspicious_Words','Password_Field_Present','Favicon_External']);
     const RATIO  = new Set(['External_Link_Ratio','Image_Link_Ratio','URL_Entropy']);
 
-    const ORDER = ['URL_Length','Num_Dots','Num_Hyphens','Num_Special_Chars','Num_Subdomains','Has_IP_Address','Has_HTTPS','Domain_Age_Days','Domain_Registration_Length','Has_Suspicious_Words','Num_Redirects','External_Link_Ratio','Image_Link_Ratio','Form_Count','Password_Field_Present','Iframe_Count','Popup_Count','Favicon_External','Domain_Name_Length','URL_Entropy'];
+    const PRESETS = {
+      custom: { URL_Length:50,Num_Dots:2,Num_Hyphens:1,Num_Special_Chars:2,Num_Subdomains:1,Has_IP_Address:0,Has_HTTPS:1,Domain_Age_Days:1200,Domain_Registration_Length:365,Has_Suspicious_Words:0,Num_Redirects:0,External_Link_Ratio:0.25,Image_Link_Ratio:0.30,Form_Count:1,Password_Field_Present:0,Iframe_Count:0,Popup_Count:0,Favicon_External:0,Domain_Name_Length:12,URL_Entropy:3.45 },
+      legitimate: { URL_Length:24,Num_Dots:1,Num_Hyphens:0,Num_Special_Chars:1,Num_Subdomains:0,Has_IP_Address:0,Has_HTTPS:1,Domain_Age_Days:3650,Domain_Registration_Length:730,Has_Suspicious_Words:0,Num_Redirects:0,External_Link_Ratio:0.15,Image_Link_Ratio:0.20,Form_Count:1,Password_Field_Present:1,Iframe_Count:0,Popup_Count:0,Favicon_External:0,Domain_Name_Length:10,URL_Entropy:3.12 },
+      phishing: { URL_Length:115,Num_Dots:6,Num_Hyphens:4,Num_Special_Chars:7,Num_Subdomains:3,Has_IP_Address:1,Has_HTTPS:0,Domain_Age_Days:12,Domain_Registration_Length:30,Has_Suspicious_Words:1,Num_Redirects:3,External_Link_Ratio:0.85,Image_Link_Ratio:0.90,Form_Count:4,Password_Field_Present:1,Iframe_Count:2,Popup_Count:3,Favicon_External:1,Domain_Name_Length:28,URL_Entropy:4.88 },
+      redirect: { URL_Length:88,Num_Dots:4,Num_Hyphens:3,Num_Special_Chars:5,Num_Subdomains:2,Has_IP_Address:0,Has_HTTPS:0,Domain_Age_Days:45,Domain_Registration_Length:90,Has_Suspicious_Words:1,Num_Redirects:4,External_Link_Ratio:0.70,Image_Link_Ratio:0.60,Form_Count:3,Password_Field_Present:0,Iframe_Count:3,Popup_Count:4,Favicon_External:1,Domain_Name_Length:22,URL_Entropy:4.52 },
+    };
 
-    function buildForm(vals = {}) {
-      const grid = document.getElementById('featureGrid');
+    function buildManualForm(vals = {}) {
+      const grid = document.getElementById('manualFieldsGrid');
       grid.innerHTML = '';
       for (const feat of ORDER) {
         const def = vals[feat] ?? 0;
         const div = document.createElement('div');
-        div.className = 'field';
+        div.className = 'field-group';
+        const label = feat.replace(/_/g, ' ');
+
         if (BINARY.has(feat)) {
-          div.innerHTML = `<label for="f_${feat}">${feat.replace(/_/g,' ')}</label>
-            <select id="f_${feat}" name="${feat}">
-              <option value="0" ${def===0?'selected':''}>0 — No</option>
-              <option value="1" ${def===1?'selected':''}>1 — Yes</option>
-            </select>`;
+          div.innerHTML = `
+            <label for="mf_${feat}">${label}</label>
+            <select id="mf_${feat}">
+              <option value="0" ${def === 0 ? 'selected' : ''}>0 — No</option>
+              <option value="1" ${def === 1 ? 'selected' : ''}>1 — Yes</option>
+            </select>
+          `;
         } else if (RATIO.has(feat)) {
-          div.innerHTML = `<label for="f_${feat}">${feat.replace(/_/g,' ')}</label>
-            <input type="number" id="f_${feat}" name="${feat}" value="${def}" step="0.01" min="0" max="${feat==='URL_Entropy'?10:1}" required />`;
+          div.innerHTML = `
+            <label for="mf_${feat}">${label}</label>
+            <input type="number" id="mf_${feat}" value="${def}" step="0.01" min="0" max="${feat === 'URL_Entropy' ? 10 : 1}" />
+          `;
         } else {
-          div.innerHTML = `<label for="f_${feat}">${feat.replace(/_/g,' ')}</label>
-            <input type="number" id="f_${feat}" name="${feat}" value="${def}" step="1" min="0" required />`;
+          div.innerHTML = `
+            <label for="mf_${feat}">${label}</label>
+            <input type="number" id="mf_${feat}" value="${def}" step="1" min="0" />
+          `;
         }
         grid.appendChild(div);
       }
     }
 
-    function applyPreset(key, btn) {
-      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      buildForm(PRESETS[key]);
-      // hide previous result
-      document.getElementById('resultPanel').classList.remove('visible','phishing','legitimate');
+    function applyPreset(key) {
+      ['pCustom', 'pLegit', 'pPhish', 'pRedirect'].forEach(id => {
+        document.getElementById(id).classList.remove('active');
+      });
+      const cardMap = { custom: 'pCustom', legitimate: 'pLegit', phishing: 'pPhish', redirect: 'pRedirect' };
+      document.getElementById(cardMap[key]).classList.add('active');
+      buildManualForm(PRESETS[key]);
+      document.getElementById('manualResultCard').classList.remove('visible');
     }
 
-    async function runDetection() {
-      const btn = document.getElementById('detectBtn');
+    async function runManualPredict() {
+      const btn = document.getElementById('btnManual');
       btn.classList.add('loading');
       btn.disabled = true;
 
-      // Collect values
       const payload = {};
       for (const feat of ORDER) {
-        const el = document.getElementById('f_' + feat);
+        const el = document.getElementById('mf_' + feat);
         payload[feat] = BINARY.has(feat) ? parseInt(el.value) : parseFloat(el.value);
       }
 
@@ -204,41 +437,41 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
         });
-        if (!res.ok) throw new Error((await res.json()).detail || 'API error');
+        if (!res.ok) throw new Error('Prediction request failed');
         const data = await res.json();
-        showResult(data);
-      } catch(e) {
-        showToast('Error: ' + e.message, true);
+        
+        const card = document.getElementById('manualResultCard');
+        const isPhish = data.prediction === 1;
+        card.className = 'scan-result-card visible ' + (isPhish ? 'phishing' : 'legitimate');
+
+        const icon = document.getElementById('mVerdictIcon');
+        const text = document.getElementById('mVerdictText');
+        const score = document.getElementById('mConfidenceScore');
+        const label = document.getElementById('mConfidenceLabel');
+        const meter = document.getElementById('mMeterFill');
+
+        if (isPhish) {
+          icon.textContent = '🚨';
+          text.textContent = 'PHISHING DETECTED';
+          const p = data.probability ? data.probability.phishing : 95.0;
+          score.textContent = p.toFixed(1) + '%';
+          label.textContent = 'THREAT PROBABILITY';
+          meter.style.width = p + '%';
+        } else {
+          icon.textContent = '🛡️';
+          text.textContent = 'LEGITIMATE WEBSITE';
+          const l = data.probability ? data.probability.legitimate : 95.0;
+          score.textContent = l.toFixed(1) + '%';
+          label.textContent = 'SAFETY CONFIDENCE';
+          meter.style.width = l + '%';
+        }
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (err) {
+        showToast(err.message, true);
       } finally {
         btn.classList.remove('loading');
         btn.disabled = false;
       }
-    }
-
-    function showResult(data) {
-      const panel = document.getElementById('resultPanel');
-      const isPhish = data.prediction === 1;
-      panel.className = 'result-panel visible ' + (isPhish ? 'phishing' : 'legitimate');
-
-      document.getElementById('resultVerdict').textContent =
-        isPhish ? '🚨 PHISHING DETECTED' : '✅ LEGITIMATE WEBSITE';
-      document.getElementById('resultSub').textContent =
-        isPhish
-          ? 'This website shows signs of a phishing attack. Do not enter credentials.'
-          : 'This website appears to be safe and legitimate.';
-
-      if (data.probability) {
-        const l = data.probability.legitimate;
-        const p = data.probability.phishing;
-        document.getElementById('legitPct').textContent = l.toFixed(1) + '%';
-        document.getElementById('phishPct').textContent = p.toFixed(1) + '%';
-        document.getElementById('barLegitLabel').textContent = `Legitimate (${l.toFixed(1)}%)`;
-        document.getElementById('barPhishLabel').textContent = `Phishing (${p.toFixed(1)}%)`;
-        document.getElementById('barLegit').style.width = l + '%';
-        document.getElementById('barPhish').style.width = p + '%';
-      }
-
-      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function showToast(msg, isError = false) {
@@ -248,31 +481,13 @@
       setTimeout(() => t.classList.remove('visible'), 3500);
     }
 
-    // Load stats for the quick-stats cards
-    async function loadStats() {
-      try {
-        let res = await fetch('/api/stats');
-        if (!res.ok) {
-          res = await fetch('/static/model_stats.json');
-        }
-        if (!res.ok) {
-          res = await fetch('/model_stats.json');
-        }
-        if (!res.ok) return;
-        const data = await res.json();
-        document.getElementById('statTotal').textContent  = (data.dataset.total_records || 0).toLocaleString();
-        document.getElementById('statFeatures').textContent = data.dataset.feature_count || 20;
-        document.getElementById('statLegit').textContent  = (data.dataset.legitimate_count || 0).toLocaleString();
-        document.getElementById('statPhish').textContent  = (data.dataset.phishing_count  || 0).toLocaleString();
-        const best = data.models?.[0];
-        if (best) document.getElementById('statBestF1').textContent = (best.f1 * 100).toFixed(2) + '%';
-      } catch {}
-    }
+    // Enter key triggers scan
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') runUrlScan();
+    });
 
-    // Init
-    buildForm(PRESETS.custom);
-    loadStats();
+    // Boot
+    buildManualForm(PRESETS.custom);
   </script>
 </body>
 </html>
-

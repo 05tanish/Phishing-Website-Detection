@@ -63,20 +63,21 @@ $RECYCLE.BIN/
 !phishing_scaler.pkl
 !api/best_phishing_model.pkl
 !api/phishing_scaler.pkl
-!model_stats.json
 *.pickle
 *.joblib
 *.h5
-*.hdf5
-*.pb
-*.pt
-*.pth
-*.ckpt
-*.model
 
-# --- Large Datasets (Whitelist project dataset only) ---
+# --- Large Datasets & Research Notebooks ---
 *.csv
-!phishing_website_raw.csv
+*.docx
+*.ipynb
+Final_Report.docx
+phishing_classification.ipynb
+phishing_website_raw.csv
+model_stats.json
+api/model_stats.json
+static/model_stats.json
+scripts/
 *.parquet
 *.feather
 *.arrow
