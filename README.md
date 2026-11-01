@@ -3,7 +3,6 @@
 An end-to-end machine learning system and interactive Streamlit web dashboard for detecting phishing websites with high accuracy ($97.16\%$) and F1-score ($96.50\%$).
 
 ---
-
 ## 🌟 Key Highlights
 
 - **4 Core Classifiers**: Trained, benchmarked, and evaluated side-by-side:
