@@ -30,13 +30,13 @@ app.add_middleware(
 )
 
 # ==============================================================================
-# PATHS
+# PATH RESOLUTION HELPERS
 # ==============================================================================
-BASE_DIR = pathlib.Path(__file__).parent.parent
-MODEL_PATH = BASE_DIR / "api" / "best_phishing_model.pkl"
-SCALER_PATH = BASE_DIR / "api" / "phishing_scaler.pkl"
-STATS_PATH = BASE_DIR / "model_stats.json"
-STATIC_DIR = BASE_DIR / "static"
+API_DIR = pathlib.Path(__file__).resolve().parent
+ROOT_DIR = API_DIR.parent
+STATIC_DIR = ROOT_DIR / "static"
+if not STATIC_DIR.exists():
+    STATIC_DIR = API_DIR / "static"
 
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -53,29 +53,65 @@ FEATURE_COLUMNS = [
 SCALED_MODELS = {"Logistic Regression", "Naive Bayes"}
 
 
+def _resolve_candidate(filenames):
+    for f in filenames:
+        candidates = [
+            API_DIR / f,
+            ROOT_DIR / f,
+            ROOT_DIR / "api" / f,
+            API_DIR / "api" / f,
+            pathlib.Path(f),
+            pathlib.Path("api") / f,
+        ]
+        for c in candidates:
+            if c.exists():
+                return c
+    return None
+
+
 # ==============================================================================
 # LAZY-LOAD MODEL & SCALER (cached so they load only once per cold start)
 # ==============================================================================
 @lru_cache(maxsize=1)
 def load_model():
-    if not MODEL_PATH.exists():
-        raise FileNotFoundError(f"Model not found at {MODEL_PATH}")
-    return joblib.load(MODEL_PATH)
+    p = _resolve_candidate(["best_phishing_model.pkl"])
+    if not p:
+        raise FileNotFoundError(
+            f"best_phishing_model.pkl not found in API_DIR={API_DIR} or ROOT_DIR={ROOT_DIR}"
+        )
+    return joblib.load(p)
 
 
 @lru_cache(maxsize=1)
 def load_scaler():
-    if not SCALER_PATH.exists():
+    p = _resolve_candidate(["phishing_scaler.pkl"])
+    if not p:
         return None
-    return joblib.load(SCALER_PATH)
+    return joblib.load(p)
 
 
 @lru_cache(maxsize=1)
 def load_stats():
-    if not STATS_PATH.exists():
-        return {}
-    with open(STATS_PATH) as f:
-        return json.load(f)
+    # Check multiple locations
+    candidates = [
+        API_DIR / "model_stats.json",
+        ROOT_DIR / "model_stats.json",
+        STATIC_DIR / "model_stats.json",
+        ROOT_DIR / "static" / "model_stats.json",
+        pathlib.Path("api/model_stats.json"),
+        pathlib.Path("model_stats.json"),
+        pathlib.Path("static/model_stats.json"),
+    ]
+    for p in candidates:
+        if p.exists():
+            try:
+                with open(p) as f:
+                    data = json.load(f)
+                    if data:
+                        return data
+            except Exception:
+                continue
+    return {}
 
 
 # ==============================================================================
@@ -125,7 +161,13 @@ def model_info_page():
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "model_loaded": MODEL_PATH.exists()}
+    model_found = _resolve_candidate(["best_phishing_model.pkl"]) is not None
+    stats_found = bool(load_stats())
+    return {
+        "status": "ok",
+        "model_loaded": model_found,
+        "stats_loaded": stats_found,
+    }
 
 
 @app.post("/api/predict")

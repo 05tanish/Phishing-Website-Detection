@@ -1,6 +1,11 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "functions": {
+    "api/*.py": {
+      "includeFiles": "api/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/model-info",
@@ -16,4 +21,3 @@
     }
   ]
 }
-

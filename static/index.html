@@ -251,7 +251,13 @@
     // Load stats for the quick-stats cards
     async function loadStats() {
       try {
-        const res = await fetch('/api/stats');
+        let res = await fetch('/api/stats');
+        if (!res.ok) {
+          res = await fetch('/static/model_stats.json');
+        }
+        if (!res.ok) {
+          res = await fetch('/model_stats.json');
+        }
         if (!res.ok) return;
         const data = await res.json();
         document.getElementById('statTotal').textContent  = (data.dataset.total_records || 0).toLocaleString();

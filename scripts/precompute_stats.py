@@ -213,10 +213,16 @@ output = {
     "best_model": best_name,
 }
 
-with open(OUT_PATH, "w") as f:
-    json.dump(output, f, indent=2)
+# Write to root, api/, and static/ to ensure availability across all runtimes
+for dest in [
+    OUT_PATH,
+    os.path.join(ROOT, "api", "model_stats.json"),
+    os.path.join(ROOT, "static", "model_stats.json"),
+]:
+    os.makedirs(os.path.dirname(dest), exist_ok=True)
+    with open(dest, "w") as f:
+        json.dump(output, f, indent=2)
+    print(f"[✓] Written to: {dest} ({os.path.getsize(dest) / 1024:.1f} KB)")
 
-print(f"\n[✓] model_stats.json written to: {OUT_PATH}")
-print(f"[✓] Best model: {best_name} (F1={results[0]['f1']:.4f})")
-print(f"[✓] File size: {os.path.getsize(OUT_PATH) / 1024:.1f} KB")
+print(f"\n[✓] Best model: {best_name} (F1={results[0]['f1']:.4f})")
 

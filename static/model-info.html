@@ -297,17 +297,27 @@
   // ── Main init ────────────────────────────────────────────
   async function init() {
     try {
-      const res = await fetch('/api/stats');
-      if (!res.ok) throw new Error('stats not found');
+      let res = await fetch('/api/stats');
+      if (!res.ok) {
+        // Fallback 1: Direct static asset
+        res = await fetch('/static/model_stats.json');
+      }
+      if (!res.ok) {
+        // Fallback 2: Root json
+        res = await fetch('/model_stats.json');
+      }
+      if (!res.ok) throw new Error('Model statistics unavailable (HTTP ' + res.status + ')');
       STATS = await res.json();
       document.getElementById('loadingState').classList.add('hidden');
       document.getElementById('pageContent').classList.remove('hidden');
       renderOverview();
     } catch(e) {
+      console.error('Failed to load stats:', e);
       document.getElementById('loadingState').innerHTML = `
         <div style="font-size:2rem;margin-bottom:var(--space-4);">⚠️</div>
         <div style="color:var(--red);">Could not load model statistics.</div>
         <div style="font-size:0.85rem;color:var(--text-muted);margin-top:var(--space-3);">
+          ${e.message}<br>
           Run <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;">python3 scripts/precompute_stats.py</code> from the project root, then redeploy.
         </div>`;
     }
