@@ -61,6 +61,9 @@ $RECYCLE.BIN/
 *.pkl
 !best_phishing_model.pkl
 !phishing_scaler.pkl
+!api/best_phishing_model.pkl
+!api/phishing_scaler.pkl
+!model_stats.json
 *.pickle
 *.joblib
 *.h5

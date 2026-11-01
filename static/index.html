@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phishing Detector — Live Detection</title>
+  <meta name="description" content="AI-powered phishing website detector using Random Forest ML model." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body class="layout">
+
+  <!-- ── Top Nav ──────────────────────────────────────────── -->
+  <nav class="topnav">
+    <div class="container">
+      <a href="/" class="nav-brand">
+        <span class="shield">🛡️</span>
+        <span>PhishGuard</span>
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link active">🔍 Detect</a>
+        <a href="/model-info" class="nav-link">📊 Model Info</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Hero ─────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="container">
+      <span class="hero-icon">🛡️</span>
+      <h1>Phishing Website<br>Detector</h1>
+      <p>Real-time ML-powered classification using a tuned Random Forest model trained on 25,000 website samples.</p>
+      <a href="/model-info" class="hero-cta">View Model Analysis &amp; Performance →</a>
+    </div>
+  </section>
+
+  <!-- ── Main ─────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="container">
+
+      <!-- Detection Card -->
+      <div class="card">
+        <div class="card-title"><span class="icon">🔍</span> Live Website Classification</div>
+
+        <!-- Preset selector -->
+        <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-4);">
+          Choose a preset scenario or fill in features manually:
+        </p>
+        <div class="preset-grid" id="presetGrid">
+          <button class="preset-btn selected" data-preset="custom" onclick="applyPreset('custom', this)">
+            <span class="preset-name">✏️ Custom Input</span>
+            <span class="preset-desc">Fill all fields manually</span>
+          </button>
+          <button class="preset-btn" data-preset="legitimate" onclick="applyPreset('legitimate', this)">
+            <span class="preset-name">✅ Legitimate Bank</span>
+            <span class="preset-desc">HTTPS, old domain, low entropy</span>
+          </button>
+          <button class="preset-btn" data-preset="phishing" onclick="applyPreset('phishing', this)">
+            <span class="preset-name">🚨 High-Risk Phishing</span>
+            <span class="preset-desc">No HTTPS, new domain, high entropy</span>
+          </button>
+          <button class="preset-btn" data-preset="redirect" onclick="applyPreset('redirect', this)">
+            <span class="preset-name">⚠️ Redirect Scam</span>
+            <span class="preset-desc">Iframes, popups, redirects</span>
+          </button>
+        </div>
+
+        <!-- Feature inputs -->
+        <div class="feature-grid" id="featureGrid">
+          <!-- Injected by JS -->
+        </div>
+
+        <!-- Detect button -->
+        <button class="btn-detect" id="detectBtn" onclick="runDetection()">
+          <div class="spinner"></div>
+          <span class="btn-text">🔍 &nbsp;Detect Phishing</span>
+        </button>
+
+        <!-- Result panel -->
+        <div class="result-panel" id="resultPanel">
+          <div class="result-verdict" id="resultVerdict"></div>
+          <div class="result-sub" id="resultSub"></div>
+
+          <div class="prob-metrics">
+            <div class="prob-metric legit">
+              <div class="value" id="legitPct">—</div>
+              <div class="label">Legitimate probability</div>
+            </div>
+            <div class="prob-metric phish">
+              <div class="value" id="phishPct">—</div>
+              <div class="label">Phishing probability</div>
+            </div>
+          </div>
+
+          <div class="prob-bar-wrap">
+            <div class="prob-bar-label">
+              <span id="barLegitLabel">Legitimate</span>
+              <span id="barPhishLabel">Phishing</span>
+            </div>
+            <div class="prob-bar-track" style="overflow:visible;">
+              <div style="height:100%;display:flex;border-radius:99px;overflow:hidden;">
+                <div class="prob-bar-fill-legit" id="barLegit" style="width:50%"></div>
+                <div class="prob-bar-fill-phish" id="barPhish" style="width:50%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dataset Quick Stats -->
+      <div style="margin-top:var(--space-8)">
+        <div class="section-label">Dataset</div>
+        <div class="section-title">Training Data Overview</div>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Total Records</div></div>
+        <div class="stat-card"><div class="stat-value" id="statFeatures">20</div><div class="stat-label">Input Features</div></div>
+        <div class="stat-card"><div class="stat-value" id="statLegit">—</div><div class="stat-label">Legitimate Sites</div></div>
+        <div class="stat-card"><div class="stat-value" id="statPhish">—</div><div class="stat-label">Phishing Sites</div></div>
+        <div class="stat-card"><div class="stat-value" id="statBestF1">—</div><div class="stat-label">Best Model F1</div></div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      🛡️ PhishGuard — ML-powered phishing detection &nbsp;·&nbsp;
+      Built with FastAPI + Vanilla JS &nbsp;·&nbsp;
+      <a href="/model-info" style="color:var(--blue);text-decoration:none;">View Model Info</a>
+    </div>
+  </footer>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="/static/js/app.js"></script>
+  <script>
+    // ── Boot ───────────────────────────────────────────────────────
+    const FEATURES_META = [];
+
+    const PRESETS = {
+      custom:     { URL_Length:0,Num_Dots:0,Num_Hyphens:0,Num_Special_Chars:0,Num_Subdomains:0,Has_IP_Address:0,Has_HTTPS:1,Domain_Age_Days:0,Domain_Registration_Length:0,Has_Suspicious_Words:0,Num_Redirects:0,External_Link_Ratio:0,Image_Link_Ratio:0,Form_Count:0,Password_Field_Present:0,Iframe_Count:0,Popup_Count:0,Favicon_External:0,Domain_Name_Length:0,URL_Entropy:0 },
+      legitimate: { URL_Length:24,Num_Dots:1,Num_Hyphens:0,Num_Special_Chars:1,Num_Subdomains:0,Has_IP_Address:0,Has_HTTPS:1,Domain_Age_Days:3650,Domain_Registration_Length:730,Has_Suspicious_Words:0,Num_Redirects:0,External_Link_Ratio:0.15,Image_Link_Ratio:0.20,Form_Count:1,Password_Field_Present:1,Iframe_Count:0,Popup_Count:0,Favicon_External:0,Domain_Name_Length:10,URL_Entropy:3.12 },
+      phishing:   { URL_Length:115,Num_Dots:6,Num_Hyphens:4,Num_Special_Chars:7,Num_Subdomains:3,Has_IP_Address:1,Has_HTTPS:0,Domain_Age_Days:12,Domain_Registration_Length:30,Has_Suspicious_Words:1,Num_Redirects:3,External_Link_Ratio:0.85,Image_Link_Ratio:0.90,Form_Count:4,Password_Field_Present:1,Iframe_Count:2,Popup_Count:3,Favicon_External:1,Domain_Name_Length:28,URL_Entropy:4.88 },
+      redirect:   { URL_Length:88,Num_Dots:4,Num_Hyphens:3,Num_Special_Chars:5,Num_Subdomains:2,Has_IP_Address:0,Has_HTTPS:0,Domain_Age_Days:45,Domain_Registration_Length:90,Has_Suspicious_Words:1,Num_Redirects:4,External_Link_Ratio:0.70,Image_Link_Ratio:0.60,Form_Count:3,Password_Field_Present:0,Iframe_Count:3,Popup_Count:4,Favicon_External:1,Domain_Name_Length:22,URL_Entropy:4.52 },
+    };
+
+    const BINARY = new Set(['Has_IP_Address','Has_HTTPS','Has_Suspicious_Words','Password_Field_Present','Favicon_External']);
+    const RATIO  = new Set(['External_Link_Ratio','Image_Link_Ratio','URL_Entropy']);
+
+    const ORDER = ['URL_Length','Num_Dots','Num_Hyphens','Num_Special_Chars','Num_Subdomains','Has_IP_Address','Has_HTTPS','Domain_Age_Days','Domain_Registration_Length','Has_Suspicious_Words','Num_Redirects','External_Link_Ratio','Image_Link_Ratio','Form_Count','Password_Field_Present','Iframe_Count','Popup_Count','Favicon_External','Domain_Name_Length','URL_Entropy'];
+
+    function buildForm(vals = {}) {
+      const grid = document.getElementById('featureGrid');
+      grid.innerHTML = '';
+      for (const feat of ORDER) {
+        const def = vals[feat] ?? 0;
+        const div = document.createElement('div');
+        div.className = 'field';
+        if (BINARY.has(feat)) {
+          div.innerHTML = `<label for="f_${feat}">${feat.replace(/_/g,' ')}</label>
+            <select id="f_${feat}" name="${feat}">
+              <option value="0" ${def===0?'selected':''}>0 — No</option>
+              <option value="1" ${def===1?'selected':''}>1 — Yes</option>
+            </select>`;
+        } else if (RATIO.has(feat)) {
+          div.innerHTML = `<label for="f_${feat}">${feat.replace(/_/g,' ')}</label>
+            <input type="number" id="f_${feat}" name="${feat}" value="${def}" step="0.01" min="0" max="${feat==='URL_Entropy'?10:1}" required />`;
+        } else {
+          div.innerHTML = `<label for="f_${feat}">${feat.replace(/_/g,' ')}</label>
+            <input type="number" id="f_${feat}" name="${feat}" value="${def}" step="1" min="0" required />`;
+        }
+        grid.appendChild(div);
+      }
+    }
+
+    function applyPreset(key, btn) {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      buildForm(PRESETS[key]);
+      // hide previous result
+      document.getElementById('resultPanel').classList.remove('visible','phishing','legitimate');
+    }
+
+    async function runDetection() {
+      const btn = document.getElementById('detectBtn');
+      btn.classList.add('loading');
+      btn.disabled = true;
+
+      // Collect values
+      const payload = {};
+      for (const feat of ORDER) {
+        const el = document.getElementById('f_' + feat);
+        payload[feat] = BINARY.has(feat) ? parseInt(el.value) : parseFloat(el.value);
+      }
+
+      try {
+        const res = await fetch('/api/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) throw new Error((await res.json()).detail || 'API error');
+        const data = await res.json();
+        showResult(data);
+      } catch(e) {
+        showToast('Error: ' + e.message, true);
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    function showResult(data) {
+      const panel = document.getElementById('resultPanel');
+      const isPhish = data.prediction === 1;
+      panel.className = 'result-panel visible ' + (isPhish ? 'phishing' : 'legitimate');
+
+      document.getElementById('resultVerdict').textContent =
+        isPhish ? '🚨 PHISHING DETECTED' : '✅ LEGITIMATE WEBSITE';
+      document.getElementById('resultSub').textContent =
+        isPhish
+          ? 'This website shows signs of a phishing attack. Do not enter credentials.'
+          : 'This website appears to be safe and legitimate.';
+
+      if (data.probability) {
+        const l = data.probability.legitimate;
+        const p = data.probability.phishing;
+        document.getElementById('legitPct').textContent = l.toFixed(1) + '%';
+        document.getElementById('phishPct').textContent = p.toFixed(1) + '%';
+        document.getElementById('barLegitLabel').textContent = `Legitimate (${l.toFixed(1)}%)`;
+        document.getElementById('barPhishLabel').textContent = `Phishing (${p.toFixed(1)}%)`;
+        document.getElementById('barLegit').style.width = l + '%';
+        document.getElementById('barPhish').style.width = p + '%';
+      }
+
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast visible' + (isError ? ' error' : '');
+      setTimeout(() => t.classList.remove('visible'), 3500);
+    }
+
+    // Load stats for the quick-stats cards
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('statTotal').textContent  = (data.dataset.total_records || 0).toLocaleString();
+        document.getElementById('statFeatures').textContent = data.dataset.feature_count || 20;
+        document.getElementById('statLegit').textContent  = (data.dataset.legitimate_count || 0).toLocaleString();
+        document.getElementById('statPhish').textContent  = (data.dataset.phishing_count  || 0).toLocaleString();
+        const best = data.models?.[0];
+        if (best) document.getElementById('statBestF1').textContent = (best.f1 * 100).toFixed(2) + '%';
+      } catch {}
+    }
+
+    // Init
+    buildForm(PRESETS.custom);
+    loadStats();
+  </script>
+</body>
+</html>
+

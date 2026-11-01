@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model Info — PhishGuard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body class="layout">
+
+  <!-- ── Top Nav ──────────────────────────────────────────── -->
+  <nav class="topnav">
+    <div class="container">
+      <a href="/" class="nav-brand">
+        <span class="shield">🛡️</span>
+        <span>PhishGuard</span>
+      </a>
+      <div class="nav-links">
+        <a href="/" class="nav-link">🔍 Detect</a>
+        <a href="/model-info" class="nav-link active">📊 Model Info</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── Page header ──────────────────────────────────────── -->
+  <section class="hero" style="padding:var(--space-8) 0 var(--space-6);">
+    <div class="container">
+      <span class="hero-icon" style="font-size:2.5rem;">📊</span>
+      <h1 style="font-size:clamp(1.6rem,4vw,2.4rem);">Model Analysis &amp; Performance</h1>
+      <p>Full breakdown of the ML pipeline — EDA, preprocessing, 4-model comparison, and the best model in-depth evaluation.</p>
+      <a href="/" class="hero-cta">← Back to Detector</a>
+    </div>
+  </section>
+
+  <!-- ── Main ─────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="container">
+
+      <!-- Loading state -->
+      <div id="loadingState" class="card text-center" style="padding:var(--space-10);">
+        <div style="font-size:2rem;margin-bottom:var(--space-4);">⏳</div>
+        <div style="color:var(--text-secondary);">Loading model statistics…</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:var(--space-2);">
+          Run <code>python3 scripts/precompute_stats.py</code> if this doesn't load.
+        </div>
+      </div>
+
+      <div id="pageContent" class="hidden">
+
+        <!-- ── Tabs ───────────────────────────────────────── -->
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('overview',this)">📋 Dataset Overview</button>
+          <button class="tab-btn" onclick="switchTab('eda',this)">📊 EDA</button>
+          <button class="tab-btn" onclick="switchTab('preprocessing',this)">⚙️ Preprocessing</button>
+          <button class="tab-btn" onclick="switchTab('training',this)">🤖 Models</button>
+          <button class="tab-btn" onclick="switchTab('comparison',this)">📈 Comparison</button>
+          <button class="tab-btn" onclick="switchTab('bestmodel',this)">🏆 Best Model</button>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════
+             TAB: Dataset Overview
+        ══════════════════════════════════════════════════ -->
+        <div class="tab-panel active" id="tab-overview">
+          <div class="stats-grid" id="overviewStats"></div>
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">⚖️</span> Class Balance</div>
+            <div class="chart-wrap" style="max-width:520px;margin:0 auto;">
+              <canvas id="classBalanceChart" height="260"></canvas>
+            </div>
+          </div>
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">🎯</span> Feature → Target Correlation</div>
+            <div id="corrBarContainer"></div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════
+             TAB: EDA
+        ══════════════════════════════════════════════════ -->
+        <div class="tab-panel" id="tab-eda">
+          <div class="card">
+            <div class="card-title"><span class="icon">📈</span> Feature Distribution</div>
+            <div style="display:flex;gap:var(--space-4);align-items:center;margin-bottom:var(--space-5);flex-wrap:wrap;">
+              <label style="font-size:0.85rem;color:var(--text-secondary);">Select feature:</label>
+              <select id="distFeatureSelect" onchange="renderDistChart()" style="padding:var(--space-2) var(--space-3);background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.875rem;outline:none;"></select>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="distChart" height="220"></canvas>
+            </div>
+            <div id="distStats" style="display:flex;gap:var(--space-6);margin-top:var(--space-4);flex-wrap:wrap;"></div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">🌡️</span> Correlation Heatmap</div>
+            <div class="heatmap-container" id="heatmapContainer"></div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════
+             TAB: Preprocessing
+        ══════════════════════════════════════════════════ -->
+        <div class="tab-panel" id="tab-preprocessing">
+          <div class="card">
+            <div class="card-title"><span class="icon">⚙️</span> Preprocessing Pipeline</div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-5);">
+              <div class="pipeline-step">
+                <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);">
+                  <span style="background:var(--blue);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">1</span>
+                  <strong>Duplicate Removal</strong>
+                </div>
+                <p style="font-size:0.875rem;color:var(--text-secondary);padding-left:40px;">Drop exact duplicate rows to prevent data leakage and inflated metrics.</p>
+              </div>
+              <div style="border-left:2px dashed var(--border);height:20px;margin-left:14px;"></div>
+              <div class="pipeline-step">
+                <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);">
+                  <span style="background:var(--blue);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">2</span>
+                  <strong>Invalid Value Clipping</strong>
+                </div>
+                <p style="font-size:0.875rem;color:var(--text-secondary);padding-left:40px;">Convert negative count/length values to NaN. Validate binary columns ∈ {0,1}. Bound ratio columns to [0,1].</p>
+              </div>
+              <div style="border-left:2px dashed var(--border);height:20px;margin-left:14px;"></div>
+              <div class="pipeline-step">
+                <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);">
+                  <span style="background:var(--blue);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">3</span>
+                  <strong>Median Imputation</strong>
+                </div>
+                <p style="font-size:0.875rem;color:var(--text-secondary);padding-left:40px;">Fill remaining NaN values with training-set medians — robust to outliers. Fit only on training split.</p>
+              </div>
+              <div style="border-left:2px dashed var(--border);height:20px;margin-left:14px;"></div>
+              <div class="pipeline-step">
+                <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);">
+                  <span style="background:var(--blue);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">4</span>
+                  <strong>Stratified Train/Test Split — 80/20</strong>
+                </div>
+                <p style="font-size:0.875rem;color:var(--text-secondary);padding-left:40px;">Stratified split preserves class proportions. Train: 80%, Test: 20% (held-out, never seen during training).</p>
+                <div style="display:flex;gap:var(--space-4);padding-left:40px;margin-top:var(--space-3);">
+                  <div class="stat-card" style="flex:1"><div class="stat-value" id="ppTrainSize">—</div><div class="stat-label">Training samples</div></div>
+                  <div class="stat-card" style="flex:1"><div class="stat-value" id="ppTestSize">—</div><div class="stat-label">Test samples</div></div>
+                </div>
+              </div>
+              <div style="border-left:2px dashed var(--border);height:20px;margin-left:14px;"></div>
+              <div class="pipeline-step">
+                <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);">
+                  <span style="background:var(--blue);color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:700;flex-shrink:0;">5</span>
+                  <strong>StandardScaler (scale-sensitive models only)</strong>
+                </div>
+                <p style="font-size:0.875rem;color:var(--text-secondary);padding-left:40px;">Applied to <em>Logistic Regression</em> and <em>Naive Bayes</em>. Tree models (Decision Tree, Random Forest) use raw features — scaling doesn't affect split decisions.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">📋</span> Feature List (20 Features)</div>
+            <div id="featureListContainer"></div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════
+             TAB: Model Training
+        ══════════════════════════════════════════════════ -->
+        <div class="tab-panel" id="tab-training">
+          <div class="card">
+            <div class="card-title"><span class="icon">🤖</span> 4 Classifier Models</div>
+            <div class="model-cards" id="modelCardsContainer"></div>
+          </div>
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">⏱️</span> Training Time Comparison</div>
+            <div class="chart-wrap" style="max-width:600px;margin:0 auto;">
+              <canvas id="trainTimeChart" height="240"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════
+             TAB: Comparison
+        ══════════════════════════════════════════════════ -->
+        <div class="tab-panel" id="tab-comparison">
+          <div class="card">
+            <div class="card-title"><span class="icon">📊</span> Performance Metrics Table</div>
+            <div class="table-wrap">
+              <table id="metricsTable">
+                <thead>
+                  <tr>
+                    <th>Model</th>
+                    <th>Accuracy</th>
+                    <th>Precision</th>
+                    <th>Recall</th>
+                    <th>F1 Score</th>
+                    <th>ROC-AUC</th>
+                    <th>Train Time</th>
+                  </tr>
+                </thead>
+                <tbody id="metricsTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">📈</span> Grouped Bar Comparison</div>
+            <div class="chart-wrap">
+              <canvas id="comparisonChart" height="300"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════════════════════════
+             TAB: Best Model
+        ══════════════════════════════════════════════════ -->
+        <div class="tab-panel" id="tab-bestmodel">
+          <div class="trophy-card" id="trophyCard"></div>
+
+          <div class="chart-grid">
+            <div class="card">
+              <div class="card-title"><span class="icon">🎯</span> Confusion Matrix</div>
+              <div class="cm-grid" id="cmGrid"></div>
+              <div style="margin-top:var(--space-4);font-size:0.8rem;color:var(--text-muted);">TN=True Negative &nbsp;·&nbsp; FP=False Positive &nbsp;·&nbsp; FN=False Negative &nbsp;·&nbsp; TP=True Positive</div>
+            </div>
+            <div class="card">
+              <div class="card-title"><span class="icon">📉</span> ROC Curve</div>
+              <div class="chart-wrap"><canvas id="rocChart" height="260"></canvas></div>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">📐</span> Precision-Recall Curve</div>
+            <div class="chart-wrap" style="max-width:600px;margin:0 auto;">
+              <canvas id="prChart" height="260"></canvas>
+            </div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">⭐</span> Feature Importance (Top 20)</div>
+            <div id="featureImportanceContainer"></div>
+          </div>
+
+          <div class="card mt-4">
+            <div class="card-title"><span class="icon">📋</span> Classification Report</div>
+            <div class="table-wrap" id="classReportContainer"></div>
+          </div>
+        </div>
+
+      </div><!-- /#pageContent -->
+    </div>
+  </main>
+
+  <footer>
+    <div class="container">
+      🛡️ PhishGuard — ML-powered phishing detection &nbsp;·&nbsp;
+      <a href="/" style="color:var(--blue);text-decoration:none;">← Back to Detector</a>
+    </div>
+  </footer>
+
+  <script>
+  // ── Chart.js global defaults ─────────────────────────────
+  Chart.defaults.color = '#94a3b8';
+  Chart.defaults.borderColor = '#2d3f55';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+
+  // ── Tab switching ────────────────────────────────────────
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + id).classList.add('active');
+    // Lazy render charts
+    if (id === 'eda' && !window._edaReady) { renderEDA(); window._edaReady = true; }
+    if (id === 'comparison' && !window._compReady) { renderComparison(); window._compReady = true; }
+    if (id === 'bestmodel' && !window._bestReady) { renderBestModel(); window._bestReady = true; }
+    if (id === 'training' && !window._trainReady) { renderTraining(); window._trainReady = true; }
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+  const pct = v => (v * 100).toFixed(2) + '%';
+  const fmt = v => (v * 100).toFixed(2);
+  const CHART_COLORS = ['#3b82f6','#22c55e','#f59e0b','#ef4444'];
+
+  // interpolate red→yellow→green by value
+  function heatColor(v) {
+    // v in [-1, 1]
+    if (v >= 0) {
+      const t = v;
+      const r = Math.round(255 * (1 - t));
+      const g = Math.round(255 * t);
+      return `rgba(${r},${g},50,${0.15 + Math.abs(v) * 0.55})`;
+    } else {
+      const t = -v;
+      const b = Math.round(220 * t);
+      return `rgba(50,50,${b},${0.15 + Math.abs(v) * 0.55})`;
+    }
+  }
+
+  let STATS = null;
+
+  // ── Main init ────────────────────────────────────────────
+  async function init() {
+    try {
+      const res = await fetch('/api/stats');
+      if (!res.ok) throw new Error('stats not found');
+      STATS = await res.json();
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('pageContent').classList.remove('hidden');
+      renderOverview();
+    } catch(e) {
+      document.getElementById('loadingState').innerHTML = `
+        <div style="font-size:2rem;margin-bottom:var(--space-4);">⚠️</div>
+        <div style="color:var(--red);">Could not load model statistics.</div>
+        <div style="font-size:0.85rem;color:var(--text-muted);margin-top:var(--space-3);">
+          Run <code style="background:var(--bg-elevated);padding:2px 6px;border-radius:4px;">python3 scripts/precompute_stats.py</code> from the project root, then redeploy.
+        </div>`;
+    }
+  }
+
+  // ── Overview tab ─────────────────────────────────────────
+  function renderOverview() {
+    const d = STATS.dataset;
+    const statsHTML = [
+      { v: d.total_records.toLocaleString(), l: 'Total Records' },
+      { v: d.feature_count, l: 'Input Features' },
+      { v: d.legitimate_count.toLocaleString(), l: `Legitimate (${d.legitimate_pct}%)` },
+      { v: d.phishing_count.toLocaleString(), l: `Phishing (${d.phishing_pct}%)` },
+      { v: d.train_size.toLocaleString(), l: 'Training Samples' },
+      { v: d.test_size.toLocaleString(), l: 'Test Samples' },
+    ].map(s => `<div class="stat-card"><div class="stat-value">${s.v}</div><div class="stat-label">${s.l}</div></div>`).join('');
+    document.getElementById('overviewStats').innerHTML = statsHTML;
+
+    // Preprocessing stats
+    document.getElementById('ppTrainSize').textContent = d.train_size.toLocaleString();
+    document.getElementById('ppTestSize').textContent  = d.test_size.toLocaleString();
+
+    // Class balance donut
+    new Chart(document.getElementById('classBalanceChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Legitimate', 'Phishing'],
+        datasets: [{ data: [d.legitimate_count, d.phishing_count], backgroundColor: ['#22c55e','#ef4444'], borderWidth: 2, borderColor: '#111827' }]
+      },
+      options: { plugins: { legend: { position: 'bottom', labels: { padding: 20 } } }, cutout: '62%' }
+    });
+
+    // Feature → target correlation bar
+    const corr = d.target_correlation;
+    const sorted = [...corr].sort((a, b) => a.correlation - b.correlation);
+    const corrHTML = sorted.map(item => {
+      const v = item.correlation;
+      const pctW = Math.abs(v) * 100;
+      const color = v >= 0 ? 'var(--green)' : 'var(--red)';
+      return `<div class="feat-bar-item">
+        <div class="feat-bar-top"><span>${item.feature}</span><span style="color:${color};font-family:var(--font-mono)">${v >= 0 ? '+' : ''}${v.toFixed(3)}</span></div>
+        <div class="feat-bar-track"><div class="feat-bar-fill" style="width:${pctW}%;background:${color}"></div></div>
+      </div>`;
+    }).join('');
+    document.getElementById('corrBarContainer').innerHTML = corrHTML;
+
+    // Feature list (preprocessing tab)
+    const feats = d.features;
+    const featsHTML = feats.map((f, i) => `
+      <span style="display:inline-flex;align-items:center;gap:6px;margin:4px;padding:4px 10px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:99px;font-size:0.78rem;font-family:var(--font-mono);">
+        <span style="background:var(--blue);color:#fff;width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;">${i+1}</span>
+        ${f}
+      </span>`).join('');
+    document.getElementById('featureListContainer').innerHTML = featsHTML;
+  }
+
+  // ── EDA tab ──────────────────────────────────────────────
+  let distChartInst = null;
+  function renderEDA() {
+    const feats = STATS.dataset.features;
+
+    // Populate dropdown
+    const sel = document.getElementById('distFeatureSelect');
+    feats.forEach(f => { const o = document.createElement('option'); o.value = f; o.textContent = f; sel.appendChild(o); });
+
+    renderDistChart();
+    renderHeatmap();
+  }
+
+  function renderDistChart() {
+    const feat = document.getElementById('distFeatureSelect').value;
+    const dist = STATS.dataset.feature_distributions[feat];
+    if (!dist) return;
+
+    // bin centers
+    const edges = dist.bin_edges;
+    const labels = edges.slice(0,-1).map((e,i) => ((e + edges[i+1])/2).toFixed(2));
+
+    if (distChartInst) distChartInst.destroy();
+    distChartInst = new Chart(document.getElementById('distChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: feat, data: dist.counts, backgroundColor: 'rgba(59,130,246,0.55)', borderColor: '#3b82f6', borderWidth: 1 }]
+      },
+      options: {
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { maxTicksLimit: 12 } },
+          y: { title: { display: true, text: 'Count' } }
+        }
+      }
+    });
+
+    document.getElementById('distStats').innerHTML = [
+      { l: 'Mean', v: dist.mean },
+      { l: 'Median', v: dist.median },
+      { l: 'Std Dev', v: dist.std },
+      { l: 'Min', v: dist.min },
+      { l: 'Max', v: dist.max },
+    ].map(s => `<div style="font-size:0.82rem;"><span style="color:var(--text-muted)">${s.l}: </span><strong style="font-family:var(--font-mono)">${s.v}</strong></div>`).join('');
+  }
+
+  function renderHeatmap() {
+    const hm = STATS.dataset.correlation_heatmap;
+    const cols = hm.columns;
+    const vals = hm.values;
+    const short = cols.map(c => c.replace(/^(Has_|Num_)/,'').replace(/_/g,' ').substring(0,8));
+
+    let html = '<table class="heatmap-table"><thead><tr><th></th>';
+    short.forEach(c => { html += `<th title="${c}">${c}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    vals.forEach((row, i) => {
+      html += `<tr><th style="text-align:right;padding-right:6px;">${short[i]}</th>`;
+      row.forEach((v, j) => {
+        const bg = heatColor(v);
+        const textColor = Math.abs(v) > 0.5 ? '#fff' : 'var(--text-secondary)';
+        html += `<td style="background:${bg};color:${textColor};" title="${cols[i]} vs ${cols[j]}: ${v}">${v.toFixed(1)}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    document.getElementById('heatmapContainer').innerHTML = html;
+  }
+
+  // ── Training tab ─────────────────────────────────────────
+  function renderTraining() {
+    const best = STATS.best_model;
+    const cardsHTML = STATS.models.map(m => `
+      <div class="model-card${m.model === best ? ' best' : ''}">
+        ${m.model === best ? '<div style="font-size:0.75rem;color:var(--yellow);margin-bottom:6px;">🏆 BEST MODEL</div>' : ''}
+        <div class="model-name">${m.model}</div>
+        <div class="model-f1">${fmt(m.f1)}%</div>
+        <div class="model-sub">F1 Score</div>
+        <div style="margin-top:var(--space-3);font-size:0.8rem;color:var(--text-muted);">
+          Accuracy: <span style="color:var(--text-primary);font-family:var(--font-mono)">${fmt(m.accuracy)}%</span><br>
+          ROC-AUC: <span style="color:var(--text-primary);font-family:var(--font-mono)">${m.roc_auc ? m.roc_auc.toFixed(4) : 'N/A'}</span><br>
+          Train time: <span style="color:var(--text-primary);font-family:var(--font-mono)">${m.train_time}s</span>
+        </div>
+      </div>`).join('');
+    document.getElementById('modelCardsContainer').innerHTML = cardsHTML;
+
+    // Training time bar chart
+    new Chart(document.getElementById('trainTimeChart'), {
+      type: 'bar',
+      data: {
+        labels: STATS.models.map(m => m.model),
+        datasets: [{ label: 'Training Time (s)', data: STATS.models.map(m => m.train_time), backgroundColor: CHART_COLORS, borderRadius: 6 }]
+      },
+      options: { plugins: { legend: { display: false } }, scales: { y: { title: { display: true, text: 'Seconds' } } } }
+    });
+  }
+
+  // ── Comparison tab ───────────────────────────────────────
+  function renderComparison() {
+    const best = STATS.best_model;
+    const tbody = document.getElementById('metricsTableBody');
+    tbody.innerHTML = STATS.models.map(m => `
+      <tr>
+        <td>${m.model === best ? `<span class="badge badge-gold">🏆</span> ` : ''}<strong>${m.model}</strong></td>
+        <td>${pct(m.accuracy)}</td>
+        <td>${pct(m.precision)}</td>
+        <td>${pct(m.recall)}</td>
+        <td>${pct(m.f1)}</td>
+        <td>${m.roc_auc ? m.roc_auc.toFixed(4) : 'N/A'}</td>
+        <td>${m.train_time}s</td>
+      </tr>`).join('');
+
+    // Grouped bar
+    const metrics = ['accuracy','precision','recall','f1'];
+    const metricLabels = ['Accuracy','Precision','Recall','F1 Score'];
+    const datasets = metrics.map((m, i) => ({
+      label: metricLabels[i],
+      data: STATS.models.map(mo => parseFloat((mo[m]*100).toFixed(2))),
+      backgroundColor: CHART_COLORS[i],
+      borderRadius: 4,
+    }));
+
+    new Chart(document.getElementById('comparisonChart'), {
+      type: 'bar',
+      data: { labels: STATS.models.map(m => m.model), datasets },
+      options: {
+        plugins: { legend: { position: 'top' } },
+        scales: {
+          y: { min: 80, max: 100, title: { display: true, text: 'Score (%)' } }
+        }
+      }
+    });
+  }
+
+  // ── Best model tab ───────────────────────────────────────
+  function renderBestModel() {
+    const best = STATS.models.find(m => m.model === STATS.best_model);
+    if (!best) return;
+
+    // Trophy card
+    document.getElementById('trophyCard').innerHTML = `
+      <div class="trophy-icon">🏆</div>
+      <h2>${best.model}</h2>
+      <p>Top-performing classifier · Optimized with tuned hyperparameters</p>
+      <div class="trophy-metrics">
+        ${[['Accuracy',best.accuracy],['Precision',best.precision],['Recall',best.recall],['F1 Score',best.f1],['ROC-AUC', best.roc_auc || 'N/A']]
+          .map(([l,v]) => `<div class="trophy-metric"><div class="t-val">${typeof v === 'number' ? pct(v) : v}</div><div class="t-lbl">${l}</div></div>`).join('')}
+      </div>`;
+
+    // Confusion matrix
+    const cm = best.confusion_matrix; // [[TN,FP],[FN,TP]]
+    document.getElementById('cmGrid').innerHTML = `
+      <div class="cm-cell cm-tn"><div class="cm-label">TN</div><div class="cm-val">${cm[0][0].toLocaleString()}</div></div>
+      <div class="cm-cell cm-fp"><div class="cm-label">FP</div><div class="cm-val">${cm[0][1].toLocaleString()}</div></div>
+      <div class="cm-cell cm-fn"><div class="cm-label">FN</div><div class="cm-val">${cm[1][0].toLocaleString()}</div></div>
+      <div class="cm-cell cm-tp"><div class="cm-label">TP</div><div class="cm-val">${cm[1][1].toLocaleString()}</div></div>`;
+
+    // ROC curve
+    if (best.roc_curve) {
+      new Chart(document.getElementById('rocChart'), {
+        type: 'line',
+        data: {
+          labels: best.roc_curve.fpr,
+          datasets: [
+            { label: `${best.model} (AUC=${best.roc_curve.auc.toFixed(4)})`, data: best.roc_curve.tpr, borderColor: '#3b82f6', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.3 },
+            { label: 'Random Chance', data: best.roc_curve.fpr, borderColor: '#64748b', borderWidth: 1, pointRadius: 0, fill: false, borderDash: [6,4] },
+          ]
+        },
+        options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { title: { display: true, text: 'False Positive Rate' } }, y: { title: { display: true, text: 'True Positive Rate' } } } }
+      });
+    }
+
+    // PR curve
+    if (best.pr_curve) {
+      new Chart(document.getElementById('prChart'), {
+        type: 'line',
+        data: {
+          labels: best.pr_curve.recall,
+          datasets: [{ label: `${best.model} (AP=${best.pr_curve.ap.toFixed(4)})`, data: best.pr_curve.precision, borderColor: '#22c55e', borderWidth: 2, pointRadius: 0, fill: false, tension: 0.3 }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } }, scales: { x: { title: { display: true, text: 'Recall' }, reverse: false }, y: { title: { display: true, text: 'Precision' }, min: 0, max: 1.05 } } }
+      });
+    }
+
+    // Feature importance
+    if (best.feature_importance) {
+      const top20 = best.feature_importance.slice(0, 20);
+      const maxImp = top20[0].importance;
+      document.getElementById('featureImportanceContainer').innerHTML =
+        top20.map(fi => `
+          <div class="feat-bar-item">
+            <div class="feat-bar-top"><span>${fi.feature}</span><span style="font-family:var(--font-mono)">${fi.importance.toFixed(4)}</span></div>
+            <div class="feat-bar-track"><div class="feat-bar-fill" style="width:${(fi.importance/maxImp*100).toFixed(1)}%"></div></div>
+          </div>`).join('');
+    }
+
+    // Classification report
+    const rpt = best.classification_report;
+    const rows = ['0','1','macro avg','weighted avg'];
+    let tableHTML = `<table><thead><tr><th>Class</th><th>Precision</th><th>Recall</th><th>F1-Score</th><th>Support</th></tr></thead><tbody>`;
+    rows.forEach(k => {
+      const r = rpt[k];
+      if (!r) return;
+      tableHTML += `<tr>
+        <td>${k === '0' ? 'Legitimate (0)' : k === '1' ? 'Phishing (1)' : k}</td>
+        <td>${typeof r.precision === 'number' ? r.precision.toFixed(4) : '—'}</td>
+        <td>${typeof r.recall === 'number' ? r.recall.toFixed(4) : '—'}</td>
+        <td>${typeof r['f1-score'] === 'number' ? r['f1-score'].toFixed(4) : '—'}</td>
+        <td>${typeof r.support === 'number' ? r.support.toLocaleString() : '—'}</td>
+      </tr>`;
+    });
+    tableHTML += '</tbody></table>';
+    document.getElementById('classReportContainer').innerHTML = tableHTML;
+  }
+
+  init();
+  </script>
+</body>
+</html>
+

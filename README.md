@@ -45,56 +45,54 @@ Ml-project/
 
 ## 🚀 Deployment Guide
 
-### Option 1: Streamlit Community Cloud (Recommended — 100% Free & 1-Click)
+### Option 1: Vercel Deployment (100% Serverless & Free)
 
-1. Push your repository to GitHub.
-2. Go to [share.streamlit.io](https://share.streamlit.io).
-3. Click **"New app"**.
-4. Select your repository: `05tanish/ML-Project`.
-5. Set **Main file path**: `app.py`.
-6. Click **"Deploy!"** — Streamlit Cloud will install dependencies and launch your live public URL!
+This project is fully configured for **Vercel** serverless deployment using a Python FastAPI backend and a responsive dark-themed frontend.
+
+1. **Push to GitHub**:
+   ```bash
+   git add .
+   git commit -m "Configure for Vercel deployment with FastAPI"
+   git push origin main
+   ```
+
+2. **Deploy on Vercel**:
+   - Go to [vercel.com](https://vercel.com) and log in.
+   - Click **"Add New..."** > **"Project"**.
+   - Import your GitHub repository (`phishingwebsitedetection` or `ML-Project`).
+   - Keep default settings (`vercel.json` and `api/index.py` are automatically detected).
+   - Click **"Deploy"**.
+
+Your web app will be live with full URL prediction and model analysis!
 
 ---
 
-### Option 2: Docker Deployment
+### Option 2: Local Execution (FastAPI Server)
 
-1. **Build the Docker Image**:
-   ```bash
-   docker build -t phishing-detector-app .
-   ```
-
-2. **Run the Container**:
-   ```bash
-   docker run -d -p 8501:8501 --name phishing-app phishing-detector-app
-   ```
-
-3. Open your browser at: `http://localhost:8501`
-
----
-
-### Option 3: Local Installation & Execution
-
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/05tanish/ML-Project.git
-   cd ML-Project
-   ```
-
-2. **Create a Virtual Environment**:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate       # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install Dependencies**:
+1. **Install dependencies**:
    ```bash
    pip install -r requirements.txt
    ```
 
-4. **Launch the Dashboard**:
+2. **Run the FastAPI server**:
    ```bash
-   streamlit run app.py
+   python3 -m uvicorn api.index:app --reload --port 8000
    ```
+
+3. Open your browser at:
+   - Live Detector: `http://localhost:8000`
+   - Model Info & Metrics: `http://localhost:8000/model-info`
+   - Interactive API Docs: `http://localhost:8000/docs`
+
+---
+
+### Option 3: Streamlit Version (Alternative)
+
+If you prefer running the original or multi-page Streamlit interface:
+```bash
+pip install -r requirements-streamlit.txt
+streamlit run Home.py
+```
 
 ---
 

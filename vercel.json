@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/model-info",
+      "destination": "/static/model-info.html"
+    },
+    {
+      "source": "/",
+      "destination": "/static/index.html"
+    },
+    {
+      "source": "/api/:path*",
+      "destination": "/api/index.py"
+    }
+  ]
+}
+
