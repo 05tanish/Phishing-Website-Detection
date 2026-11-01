@@ -443,9 +443,15 @@ def extract_features_from_url(raw_url: str):
 # ==============================================================================
 @app.get("/", include_in_schema=False)
 def index_page():
-    index_file = STATIC_DIR / "index.html"
-    if index_file.exists():
-        return FileResponse(str(index_file))
+    for candidate in [
+        STATIC_DIR / "index.html",
+        API_DIR / "static" / "index.html",
+        ROOT_DIR / "static" / "index.html",
+        pathlib.Path("static/index.html"),
+        pathlib.Path("api/static/index.html"),
+    ]:
+        if candidate.exists():
+            return FileResponse(str(candidate))
     return {"message": "PhishGuard Threat Intelligence API"}
 
 
@@ -548,6 +554,12 @@ async def catch_all_router(request: Request, path_name: str):
     # Handle favicon
     if "favicon.ico" in target:
         return favicon()
+
+    # Handle style.css
+    if "style.css" in target:
+        for c in [STATIC_DIR / "css" / "style.css", API_DIR / "static" / "css" / "style.css"]:
+            if c.exists():
+                return FileResponse(str(c), media_type="text/css")
 
     # Handle health check
     if "health" in target:
